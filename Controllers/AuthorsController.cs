@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryAPI.Resources;
 
@@ -27,12 +22,25 @@ namespace LibraryAPI.Controllers
             return await _context.Author.ToListAsync();
         }
 
-        // GET: api/Authors/5
+        // GET: api/Authors/[id]
         [HttpGet("{id}")]
         public async Task<ActionResult<Author>> GetAuthor(int id)
         {
             var author = await _context.Author.FindAsync(id);
 
+            if (author == null)
+            {
+                return NotFound();
+            }
+
+            return author;
+        }
+
+        // GET: api/Authors/[Author name]
+        [HttpGet("{FirstName}")]
+        public async Task<ActionResult<Author>> GetAuthor(string FirstName)
+        {
+            var author = await _context.Author.FindAsync(FirstName);
             if (author == null)
             {
                 return NotFound();

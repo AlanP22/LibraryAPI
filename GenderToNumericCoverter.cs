@@ -1,27 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Linq.Expressions;
 
 namespace LibraryAPI
 {
-    public class GenderToNumericConverter : ValueConverter<string, int>
+    // This is custom value converter that changes male and female to boolean values and the other way 
+    public class GenderToNumericCoverter : ValueConverter<string, bool>
     {
-        public GenderToNumericConverter() : base(input =>
-        {
-            if (input == "male")
-            {
-                return 1;
-            }
-            else if (input == "female")
-            {
-                return 0;
-            }
-            else
-            {
-                throw new Exception("Invalid input. Insert male or female");
-            }
-        }, output => output == 1 ? "male" : output == 0 ? "female" : throw new Exception("Invalid output. Insert 0 or 1"),
-        mappingHints: null)
-        {
 
+        public GenderToNumericCoverter() : base(input => input == "male" , output => output ? "male" : "female", mappingHints: null)
+        {
         }
     }
 }

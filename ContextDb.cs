@@ -30,7 +30,7 @@ public class AuthorContext : DbContext
         modelBuilder
             .Entity<Author>()
             .Property(e => e.Gender)
-            .HasConversion<int>();
+            .HasConversion<GenderToNumericCoverter>();
     }
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {

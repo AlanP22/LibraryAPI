@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LibraryAPI.Resources
 {
+    // Author model
     public class Author 
     {
         [Key]
@@ -14,8 +15,8 @@ namespace LibraryAPI.Resources
         public string LastName { get; set; } = null!;
         [Column(TypeName = "Datetime2")]
         public DateOnly BirthDate { get; set; } 
-        [Column(TypeName = "bit"), NotMapped]
-        public bool Gender { get; set; } 
+        [Column(TypeName = "bit")]
+        public string Gender { get; set; } 
 
     }
 }
