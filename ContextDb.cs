@@ -2,54 +2,33 @@
 using Microsoft.EntityFrameworkCore;
 
 
-public class BookContext : DbContext
+public class LibraryContext : DbContext
 {
-    public BookContext(DbContextOptions<BookContext> options) : base(options)
+    public LibraryContext(DbContextOptions<LibraryContext> options) : base(options)
     {
-
     }
-    protected override void ConfigureConventions(ModelConfigurationBuilder builder)
-    {
-        builder.Properties<DateOnly>()
-            .HaveConversion<DateOnlyConverter>()
-            .HaveColumnType("Datetime2");
-    }
-
-    public DbSet<Book> Book { get; set; } = null!;
-}
-public class AuthorContext : DbContext
-{
-
-    public AuthorContext(DbContextOptions<AuthorContext> options) : base(options)
-    {
-
-    }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // added conversion of string values (male/female) to bit
         modelBuilder
-            .Entity<Author>()
-            .Property(e => e.Gender)
-            .HasConversion<GenderToNumericCoverter>();
+             .Entity<Author>()
+             .Property(e => e.Gender)
+             .HasConversion<GenderToNumericCoverter>();
+        // relationship configuration by fluentAPI
+        modelBuilder.Entity<Book>()
+            .HasOne(p => p.Author)
+            .WithMany(b => b.Books);
     }
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
+        // added DateOnly to DateTime2 conversion
         builder.Properties<DateOnly>()
             .HaveConversion<DateOnlyConverter>()
             .HaveColumnType("Datetime2");
-
     }
 
     public DbSet<Author> Author { get; set; } = null!;
+    public DbSet<Book> Book { get; set; } = null!;
 }
 
-public class BooksAuthorsContext : DbContext
-{
-    public BooksAuthorsContext(DbContextOptions<BooksAuthorsContext> options) : base(options)
-    {
-
-    }
-
-    public DbSet<BookAuthor> BooksAuthors { get; set; } = null!;
-}
 

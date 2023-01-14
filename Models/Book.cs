@@ -16,9 +16,13 @@ namespace LibraryAPI.Resources
         [Column(TypeName = "decimal")]
         public float Rating { get; set; }
         [Column(TypeName = "nvarchar(13)")]
-        public int ISBN { get; set; }
+        public string ISBN { get; set; }
+        // publication date can be passed in DateOnly format (rrrr-mm-dd) because of added conversion
         [Column(TypeName = "Datetime2")]
-        public DateOnly PublicationDate { get; set; }
-
+        public DateTime PublicationDate { get; set; }
+        public int AuthorID { get; set; }
+        [ForeignKey("AuthorID")]
+        public virtual Author? Author { get; set; }
     }
+
 }

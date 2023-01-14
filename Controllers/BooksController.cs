@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryAPI.Resources;
 
@@ -13,80 +8,148 @@ namespace LibraryAPI.Controllers
     [ApiController]
     public class BooksController : ControllerBase
     {
-        private readonly BookContext _context;
+        private readonly LibraryContext _context;
 
-        public BooksController(BookContext context)
+        public BooksController(LibraryContext context)
         {
             _context = context;
         }
 
-        // GET: api/Books
+        // All get methods (exept by id) are returning only author name, instead of whole author enitity, to make output cleared
+
+        //Read all books - GET: api/Books
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
         {
-            var books = await _context.Book.ToListAsync();
-            if (books == null)
-            {
-                return NotFound();
-            }
+
+            var books = await _context.Book
+                                      .Include(b => b.Author)
+                                       .Select(b => new
+                                       {
+                                           b.Id,
+                                           b.Title,
+                                           b.Description,
+                                           AuthorName = b.Author.FirstName + " " + b.Author.LastName,
+                                           b.Rating,
+                                           b.ISBN,
+                                           b.PublicationDate         
+                                       })
+                                       .ToListAsync();
             return Ok(books);
         }
 
-        // GET: api/Books/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Book>> GetBook(int id)
+        //Book search by author name - GET: api/Books/ByAuthor/[authorName]
+        [HttpGet("ByAuthor/{authorName}")]
+        public async Task<ActionResult<IEnumerable<Book>>> GetBooksByAuthor(string authorName)
         {
-            var book = await _context.Book.FindAsync(id);
+            var books = await _context.Book
+                                      .Include(b => b.Author)
+                                       .Where(b => b.Author.FirstName + " " + b.Author.LastName == authorName)
+                                       .Select(b => new
+                                       {
+                                           b.Id,
+                                           b.Title,
+                                           b.Description,
+                                           AuthorName = b.Author.FirstName + " " + b.Author.LastName,
+                                           b.Rating,
+                                           b.ISBN,
+                                           b.PublicationDate
+                                       })
+                                       .ToListAsync();
 
-            if (book == null)
+            if (!books.Any())
             {
                 return NotFound();
             }
 
-            return book;
+
+            return Ok(books);
         }
 
-        // PUT: api/Books/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutBook(int id, Book book)
+        //Book search by title - GET: api/Books/ByTitle/[Title]
+        [HttpGet("ByTitle/{title}")]
+        public async Task<ActionResult<Book>> GetBookByTitle(string title)
         {
-            if (id != book.Id)
+            var books = await _context.Book
+                                      .Include(b => b.Author)
+                                      .Where(b => b.Title == title)
+                                       .Select(b => new
+                                       {
+                                           b.Id,
+                                           b.Title,
+                                           b.Description,
+                                           AuthorName = b.Author.FirstName + " " + b.Author.LastName,
+                                           b.Rating,
+                                           b.ISBN,
+                                           b.PublicationDate
+                                       })
+                                       .ToListAsync();
+
+            if (!books.Any())
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(book).State = EntityState.Modified;
 
-            try
+            return Ok(books);
+        }
+
+        //Book search by id - GET: api/Books/[id]
+        [HttpGet("{Id}")]
+        public async Task<ActionResult<Book>> GetBook(int id)
+        {
+            var book = _context.Book.Include(b => b.Author)
+                                    .Where(b => b.Id == id);
+            if (!book.Any())
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!BookExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return NotFound();
             }
 
             return Ok(book);
         }
 
-        // POST: api/Books
+
+
+        //Edit boot - PUT: api/Books/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutBook(int id, Book bookUpdate)
+        {
+            var book = await _context.Book.FindAsync(id);
+            if (book == null)
+            {
+                return NotFound();
+            }
+            _context.Entry(book).CurrentValues.SetValues(bookUpdate);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        //Add book - POST: api/Books
         [HttpPost]
         public async Task<ActionResult<Book>> PostBook(Book book)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var author = await _context.Author.FindAsync(book.AuthorID);
+
+            if (author == null)
+            {
+                throw new Exception("Author not found");
+            }
+
+            author.Books.Add(book);
+            book.Author = author;
+
             _context.Book.Add(book);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetBook", new { id = book.Id }, book);
         }
 
-        // DELETE: api/Books/5
+        //Delete book - DELETE: api/Books/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
         {

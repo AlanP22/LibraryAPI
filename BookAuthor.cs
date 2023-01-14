@@ -1,12 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using LibraryAPI.Resources;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.ObjectModel;
 
-namespace LibraryAPI.Resources
+namespace LibraryAPI
 {
     public class BookAuthor
     {
-        [Column(TypeName = "Foreign Key")]
-        public int BookId { get; set; }
-        [Column(TypeName = "Foreign Key")]
-        public int AuthorId { get; set; }
+        public int? AuthorID { get; set; }
+        public Author Author { get; set; }
+        public virtual ICollection<Book>? Books { get; set; }
     }
 }

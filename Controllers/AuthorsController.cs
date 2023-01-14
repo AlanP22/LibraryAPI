@@ -8,21 +8,40 @@ namespace LibraryAPI.Controllers
     [ApiController]
     public class AuthorsController : ControllerBase
     {
-        private readonly AuthorContext _context;
+        private readonly LibraryContext _context;
 
-        public AuthorsController(AuthorContext context)
+        public AuthorsController(LibraryContext context)
         {
             _context = context;
         }
 
-        // GET: api/Authors
+        //Read all authors - GET: api/Authors
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Author>>> GetAuthors()
         {
-            return await _context.Author.ToListAsync();
+
+            return await _context.Author.Include("Books").ToListAsync();
         }
 
-        // GET: api/Authors/[id]
+
+        // Author search by full name - GET: api/Author/ByName/[FullName]
+        [HttpGet("ByName/{FullName}")]
+        public async Task<ActionResult<Author>> GetAuthorByName(string FullName)
+        {
+            var author = await _context.Author
+                                        .Include(a => a.Books)
+                                        .Where(a => a.FirstName + " " + a.LastName == FullName)
+                                        .ToListAsync();
+
+            if (author == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(author);
+        }
+
+        //Author search by Id - GET: api/Authors/[id]
         [HttpGet("{id}")]
         public async Task<ActionResult<Author>> GetAuthor(int id)
         {
@@ -36,50 +55,7 @@ namespace LibraryAPI.Controllers
             return author;
         }
 
-        // GET: api/Authors/[Author name]
-        [HttpGet("{FirstName}")]
-        public async Task<ActionResult<Author>> GetAuthor(string FirstName)
-        {
-            var author = await _context.Author.FindAsync(FirstName);
-            if (author == null)
-            {
-                return NotFound();
-            }
-
-            return author;
-        }
-
-        // PUT: api/Authors/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutAuthor(int id, Author author)
-        {
-            if (id != author.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(author).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AuthorExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Authors
+        //Add author - POST: api/Authors
         [HttpPost]
         public async Task<ActionResult<Author>> PostAuthor(Author author)
         {
@@ -87,22 +63,6 @@ namespace LibraryAPI.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetAuthor", new { id = author.Id }, author);
-        }
-
-        // DELETE: api/Authors/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAuthor(int id)
-        {
-            var author = await _context.Author.FindAsync(id);
-            if (author == null)
-            {
-                return NotFound();
-            }
-
-            _context.Author.Remove(author);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
         private bool AuthorExists(int id)

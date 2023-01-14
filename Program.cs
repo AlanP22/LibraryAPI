@@ -1,16 +1,19 @@
 using LibraryAPI;
 using LibraryAPI.Resources;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
+// Added in case of circular reference issue
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+}); ;
+// Added DateOnly to DateTime2 conversion to serializer
 builder.Services.AddMvc().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new DateOnlyConverterJSON()));
-builder.Services.AddDbContext<BookContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("LibraryDB")));
-builder.Services.AddDbContext<AuthorContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("LibraryDB")));
-builder.Services.AddDbContext<BooksAuthorsContext>(options =>
+// configuration of connection to db
+builder.Services.AddDbContext<LibraryContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("LibraryDB")));
 builder.Services.AddEndpointsApiExplorer();
 
