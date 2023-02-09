@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using System.Linq.Expressions;
 
 namespace LibraryAPI
 {
@@ -7,7 +6,7 @@ namespace LibraryAPI
     public class GenderToNumericCoverter : ValueConverter<string, bool>
     {
 
-        public GenderToNumericCoverter() : base(input => input == "male" , output => output ? "male" : "female", mappingHints: null)
+        public GenderToNumericCoverter() : base(input => input == "male", output => output ? "male" : "female", mappingHints: null)
         {
         }
     }
